@@ -1,0 +1,34 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.1.8", features = ["derive"] }
+mio = { version = "0.8", features = ["os-poll", "net", "os-ext"] }
+
+[[bin]]
+name = "tcp_server"
+path = "src/tcp_server.rs"
+
+[[bin]]
+name = "tcp_client"
+path = "src/tcp_client.rs"
+
+[[bin]]
+name = "udp_server"
+path = "src/udp_server.rs"
+
+[[bin]]
+name = "udp_client"
+path = "src/udp_client.rs"
+
+[[bin]]
+name = "udp_server_mio"
+path = "src/udp_server_mio.rs"
+
+[[bin]]
+name = "udp_client_mio"
+path = "src/udp_client_mio.rs"
