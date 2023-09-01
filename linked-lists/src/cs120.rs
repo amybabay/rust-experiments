@@ -7,15 +7,18 @@ struct Node {
 
 pub struct List {
     head: Option<Box<Node>>,
+    len: u32,
 }
 
 impl List {
     pub fn new() -> Self {
-        List { head: None } // return empty list
+        List { head: None, len: 0 } // return empty list
     }
 
     // Print the contents of the list
     pub fn print(&mut self) {
+        println!("length: {}", self.len);
+
         let mut cur_node = &self.head;
         while let Some(node) = cur_node {
             print!("{} -> ", node.elem);
@@ -32,7 +35,7 @@ impl List {
         if self.head.is_none() {
             let new_node = Box::new(Node { elem: elem, next: None });
             self.head = Some(new_node);
-
+            self.len += 1;
             return true;
         }
 
@@ -45,6 +48,7 @@ impl List {
                 // head to new node)
                 let new_node = Box::new(Node { elem: elem, next: mem::replace(&mut self.head, None) });
                 self.head = Some(new_node);
+                self.len += 1;
                 return true;
             }
         }
@@ -61,6 +65,7 @@ impl List {
                     // cur_node and next_node
                     let new_node = Box::new(Node { elem: elem, next: mem::replace(&mut cur_node.next, None) });
                     cur_node.next = Some(new_node);
+                    self.len += 1;
                     return true;
                 }
                 cur_opt = &mut cur_node.next;
@@ -68,7 +73,50 @@ impl List {
                 // We traversed the whole list and this value was greater than every element. Add at end.
                 let new_node = Box::new(Node { elem: elem, next: None });
                 cur_node.next = Some(new_node);
+                self.len += 1;
                 return true;
+            }
+        }
+
+        unreachable!();
+    }
+
+    // Remove a number from the repository if such exists. The operation should return True if the
+    // number was removed, and False if the number was not found in the repository.
+    pub fn delete(&mut self, elem: i32) -> bool {
+        // Empty list, nothing to do
+        if self.head.is_none() {
+            return false;
+        }
+
+        // Special case to allow checking head itself
+        if let Some(node) = &mut self.head {
+            if elem == node.elem {
+                self.head = mem::replace(&mut node.next, None);
+                self.len -= 1;
+                return true;
+            } else if elem < node.elem {
+                return false;
+            }
+        }
+        // At this point, we know value to remove is greater than the value of the head
+
+        // General case: check whether elem is equal to the value of the *next* node. if it is,
+        // remove and re-link. if we reach a larger value, can stop searching
+        let mut cur_opt = &mut self.head;
+        while let Some(ref mut cur_node) = cur_opt { // TODO: understand "ref" in more detail
+            if let Some(next_node) = &mut cur_node.next {
+                if elem == next_node.elem {
+                    cur_node.next = mem::replace(&mut next_node.next, None);
+                    self.len -= 1;
+                    return true;
+                } else if elem < next_node.elem {
+                    return false;
+                }
+                cur_opt = &mut cur_node.next;
+            } else { // next_node is null
+                // We traversed the whole list and this value was greater than every element. Nothing to do
+                return false;
             }
         }
 
@@ -127,5 +175,37 @@ mod test{
         assert_eq!(list.insert(22), true);
 
         list.print();
+
+        // Deleting from beginning and end should work
+        assert_eq!(list.delete(7), true);
+        assert_eq!(list.delete(22), true);
+
+        // Deleting from middle should work
+        assert_eq!(list.delete(11), true);
+        assert_eq!(list.delete(12), true);
+
+        // Deleting already deleted elements should fail
+        assert_eq!(list.delete(7), false);
+        assert_eq!(list.delete(22), false);
+        assert_eq!(list.delete(12), false);
+
+        list.print();
+
+        let mut list2 = List::new();
+
+        // Deleting from empty list should fail
+        assert_eq!(list2.delete(1), false);
+
+        assert_eq!(list2.insert(1), true);
+
+        // Deleting only element from list should work
+        assert_eq!(list2.delete(1), true);
+
+        assert_eq!(list2.insert(1), true);
+        assert_eq!(list2.insert(2), true);
+        assert_eq!(list2.delete(1), true);
+        assert_eq!(list2.delete(1), false);
+
+        list2.print();
     }
 }
