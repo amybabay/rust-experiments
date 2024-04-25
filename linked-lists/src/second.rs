@@ -1,7 +1,8 @@
 pub struct IntoIter<T>(List<T>); // convert list into iterator
 
-pub struct Iter<T> {
-    next: Option<&Node<T>>,
+// Iter is generic over some lifetime 'a
+pub struct Iter<'a, T> {
+    next: Option<&'a Node<T>>,
 }
 
 pub struct List<T> {
@@ -35,7 +36,7 @@ impl<T> List<T> {
 
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         // Use as_mut() because we don't want to move node out of head (and do want reference to be
-        // mutable
+        // mutable)
         self.head.as_mut().map(|node| {
             &mut node.elem
         })
@@ -68,7 +69,7 @@ impl<T> List<T> {
     }
 
     pub fn iter(&self) -> Iter<T> {
-        Iter { next: self.head.map(|node| &node) }
+        Iter { next: self.head.as_deref().map(|node| &*node) }
     }
 }
 
@@ -91,15 +92,16 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
-impl<T> Iterator for Iter<T> {
-    type Item = &T;
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.next.map(|node| {
-            self.next = node.next.map(|node| &node);
+            self.next = node.next.as_deref().map(|node| &*node);
             &node.elem
         })
     }
+}
 
 #[cfg(test)]
 mod test{
